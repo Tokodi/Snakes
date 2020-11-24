@@ -22,8 +22,8 @@ position_t game_t::placePlayerOnTable(uint32_t id, std::string username) {
     _snakes.push_back(std::make_unique<snake_t>(randomSnakePosition, id, username));
 
     try {
-        _table->setField(_snakes.back()->getHeadPosition(), id);
-        _table->setField(_snakes.back()->getTailPosition(), id);
+        _table->setField(_snakes.back()->getHeadPosition(), '0' + id);
+        _table->setField(_snakes.back()->getTailPosition(), '0' + id);
     } catch (std::exception& e) {
         std::cerr << "[" << __func__ << "] Exception caught: " << e.what() << std::endl;
     }

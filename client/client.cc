@@ -27,7 +27,7 @@ void client_t::onMessageReceive(const std::shared_ptr<const net::common::owned_m
                         _game.setTableField(position_t(field.x(), field.y()), 'F');
                         break;
                     case snakes::field_t::SNAKE:
-                        _game.setTableField(position_t(field.x(), field.y()), field.id());
+                        _game.setTableField(position_t(field.x(), field.y()), '0' + field.id());
                         break;
                     case snakes::field_t::EMPTY:
                         _game.setTableField(position_t(field.x(), field.y()), '0');

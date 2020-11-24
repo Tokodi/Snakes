@@ -9,6 +9,7 @@ int main() {
     // NOTE: If removed server gets desctructed, but startMessageProcessingLoop does not return
     int serverCommand;
     std::cin >> serverCommand;
+    server.startGame();
 
     return 0;
 }

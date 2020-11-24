@@ -14,6 +14,8 @@ class server_t final : public net::server::proto_server_t<snakes::common_msg_t> 
     server_t(const uint16_t port);
     ~server_t() {}
 
+    void startGame();
+
   private:
     void processLoginMessage(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> loginMessage);
 

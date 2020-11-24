@@ -8,7 +8,16 @@ namespace server {
 
 server_t::server_t(const uint16_t port) : net::server::proto_server_t<snakes::common_msg_t>(port) {
     _game.createFood();
+}
+
+void server_t::startGame() {
+    std::cout << "[GameServer] Starting game!" << std::endl;
     _game.getTable()->debugPrint();
+
+    snakes::common_msg_t stepGameMsg;
+    stepGameMsg.set_id(3);
+
+    broadcastMessage(stepGameMsg);
 }
 
 void server_t::onConnectionClose(const std::shared_ptr<const net::common::connection_t<snakes::common_msg_t>> connection) {
@@ -54,7 +63,7 @@ void server_t::processLoginMessage(const std::shared_ptr<const net::common::owne
         snakes::common_msg_t snakeMsg;
         snakeMsg.set_id(2);
 
-        snakes::position_msg_t* snakePosition = newSnakeMsg.mutable_field_change()->add_position();
+        snakes::position_msg_t* snakePosition = snakeMsg.mutable_field_change()->add_position();
         snakePosition->set_field_type(snakes::field_t::SNAKE);
         snakePosition->set_id(snake->getId());
         snakePosition->set_x(snake->getHeadPosition().first);
