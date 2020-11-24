@@ -37,36 +37,42 @@ void server_t::processLoginMessage(const std::shared_ptr<const net::common::owne
     position_t playerPosition = _game.placePlayerOnTable(loginMessage->ownerConnection->getId(), loginMessage->msg.login().username());
 
     // Broadcast new player position
-    snakes::common_msg_t commonSnakeMsg;
-    commonSnakeMsg.set_id(3);
-    commonSnakeMsg.mutable_snake()->set_id(loginMessage->ownerConnection->getId());
+    snakes::common_msg_t newSnakeMsg;
+    newSnakeMsg.set_id(2);
 
-    snakes::position_msg_t* position = commonSnakeMsg.mutable_snake()->add_snakepart();
-    position->set_x(playerPosition.first);
-    position->set_y(playerPosition.second);
+    snakes::position_msg_t* newSnakePosition = newSnakeMsg.mutable_field_change()->add_position();
+    newSnakePosition->set_field_type(snakes::field_t::SNAKE);
+    newSnakePosition->set_id(loginMessage->ownerConnection->getId());
+    newSnakePosition->set_x(playerPosition.first);
+    newSnakePosition->set_y(playerPosition.second);
 
-    broadcastMessage(commonSnakeMsg);
+    broadcastMessage(newSnakeMsg, loginMessage->ownerConnection);
 
-    // Send already added snakes to new player
-    // TODO: Sends duplicate of the newly added player
+    // TODO: Send the whole snake, not just the head, for later joiners
+    // Send already online players position to newcomer
     for (const auto& snake : _game.getSnakes()) {
-        snakes::common_msg_t commonSnakeMsg;
-        commonSnakeMsg.set_id(3);
-        commonSnakeMsg.mutable_snake()->set_id(snake->getId());
+        snakes::common_msg_t snakeMsg;
+        snakeMsg.set_id(2);
 
-        snakes::position_msg_t* position = commonSnakeMsg.mutable_snake()->add_snakepart();
-        position->set_x(snake->getHeadPosition().first);
-        position->set_y(snake->getHeadPosition().second);
-        sendMessageToClient(loginMessage->ownerConnection, commonSnakeMsg);
+        snakes::position_msg_t* snakePosition = newSnakeMsg.mutable_field_change()->add_position();
+        snakePosition->set_field_type(snakes::field_t::SNAKE);
+        snakePosition->set_id(snake->getId());
+        snakePosition->set_x(snake->getHeadPosition().first);
+        snakePosition->set_y(snake->getHeadPosition().second);
+
+        sendMessageToClient(loginMessage->ownerConnection, snakeMsg);
     }
 
     // Send food position to new player
-    snakes::common_msg_t commonFoodMsg;
-    commonFoodMsg.set_id(2);
-    commonFoodMsg.mutable_food()->mutable_position()->set_x(_game.getFood()->getPosition().first);
-    commonFoodMsg.mutable_food()->mutable_position()->set_y(_game.getFood()->getPosition().second);
+    snakes::common_msg_t foodMsg;
+    foodMsg.set_id(2);
 
-    sendMessageToClient(loginMessage->ownerConnection, commonFoodMsg);
+    snakes::position_msg_t* foodPosition = foodMsg.mutable_field_change()->add_position();
+    foodPosition->set_field_type(snakes::field_t::FOOD);
+    foodPosition->set_x(_game.getFood()->getPosition().first);
+    foodPosition->set_y(_game.getFood()->getPosition().second);
+
+    sendMessageToClient(loginMessage->ownerConnection, foodMsg);
 }
 
 } // ns server

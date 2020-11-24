@@ -44,10 +44,9 @@ std::vector<std::unique_ptr<snake_t>> const& game_t::getSnakes() const {
     return _snakes;
 }
 
-// TODO: This whole game module should berafactored *server client common
-void game_t::drawFoodOnTable(position_t food) {
+void game_t::setTableField(position_t position, char fieldType) {
     try {
-        _table->setField(position_t(food.first, food.second), 'F');
+        _table->setField(position_t(position.first, position.second), fieldType);
     } catch (std::exception& e) {
         std::cerr << "[" << __func__ << "] Exception caught: " << e.what() << std::endl;
     }

@@ -19,12 +19,16 @@ template<class proto_message_t>
 class proto_client_t {
   public:
     proto_client_t() {}
-    ~proto_client_t();
+    virtual ~proto_client_t();
 
-    bool connect(const std::string& host, const uint16_t port);
+  protected:
+    bool connectToServer(const std::string& ip, const uint16_t port);
+    void sendMessageToServer(const proto_message_t& message);
 
-    void sendMessage(const proto_message_t& message);
-    const std::shared_ptr<common::owned_message_t<proto_message_t>> getEvent();
+    virtual void onMessageReceive(const std::shared_ptr<const common::owned_message_t<proto_message_t>> message) = 0;
+
+  private:
+    void startMessageProcessingLoop();
 
   private:
     boost::asio::io_context _ioContext;
@@ -32,6 +36,7 @@ class proto_client_t {
 
     std::shared_ptr<common::connection_t<proto_message_t>> _connection;
     common::ts_queue<common::owned_raw_message_t<proto_message_t>> _inputMessageQueue;
+    std::thread _messageProcessingThread;
 };
 
 template<class proto_message_t>
@@ -40,19 +45,24 @@ proto_client_t<proto_message_t>::~proto_client_t() {
     if (_ioContextThread.joinable()) {
         _ioContextThread.join();
     }
+
+    // TODO: How to shut down infinity loop?
+    if (_messageProcessingThread.joinable())
+        _messageProcessingThread.join();
 }
 
 template<class proto_message_t>
-bool proto_client_t<proto_message_t>::connect(const std::string& host, const uint16_t port) {
+bool proto_client_t<proto_message_t>::connectToServer(const std::string& ip, const uint16_t port) {
     try {
         boost::asio::ip::tcp::resolver resolver(_ioContext);
-        boost::asio::ip::tcp::resolver::results_type endpoint = resolver.resolve(host, std::to_string(port));
+        boost::asio::ip::tcp::resolver::results_type endpoint = resolver.resolve(ip, std::to_string(port));
 
         _connection = std::make_shared<common::connection_t<proto_message_t>>(_ioContext, boost::asio::ip::tcp::socket(_ioContext), _inputMessageQueue, 0);
         _connection->connectToEndpoint(endpoint);
         // TODO: return value for connectToEndpoint and if success -> call start processing here
 
         _ioContextThread = std::thread([this]() { _ioContext.run(); });
+        _messageProcessingThread = std::thread([this]() { startMessageProcessingLoop(); });
     } catch (std::exception& e) {
         std::cerr << "[Client] Connect exception: " << e.what() << std::endl;
         return false;
@@ -62,7 +72,7 @@ bool proto_client_t<proto_message_t>::connect(const std::string& host, const uin
 }
 
 template<class proto_message_t>
-void proto_client_t<proto_message_t>::sendMessage(const proto_message_t& message) {
+void proto_client_t<proto_message_t>::sendMessageToServer(const proto_message_t& message) {
     if (_connection && _connection->isOpen()) {
         _connection->send(message);
     } else {
@@ -70,28 +80,31 @@ void proto_client_t<proto_message_t>::sendMessage(const proto_message_t& message
     }
 }
 
-// TODO: This is common code with server
+// TODO: owned message is not needed here. Client only has 1 connection, and its the server
 template<class proto_message_t>
-const std::shared_ptr<common::owned_message_t<proto_message_t>> proto_client_t<proto_message_t>::getEvent() {
-    _inputMessageQueue.wait();
+void proto_client_t<proto_message_t>::startMessageProcessingLoop() {
+    std::shared_ptr<common::owned_message_t<proto_message_t>> incomingMessage;
+    while (true) {
+        _inputMessageQueue.wait();
 
-    std::shared_ptr<common::owned_message_t<proto_message_t>> incomingMessage =
-        std::make_shared<common::owned_message_t<proto_message_t>>(_inputMessageQueue.front().ownerConnection);
-    google::protobuf::io::ArrayInputStream ais(_inputMessageQueue.front().msg.data(), _inputMessageQueue.front().msg.size());
-    google::protobuf::io::CodedInputStream cis(&ais);
-    if (incomingMessage->msg.ParseFromCodedStream(&cis)) {
-        incomingMessage->ownerConnection = _inputMessageQueue.front().ownerConnection;
-        if (!cis.ConsumedEntireMessage()) {
-            throw; // TODO
+        incomingMessage =
+            std::make_shared<common::owned_message_t<proto_message_t>>(_inputMessageQueue.front().ownerConnection);
+        google::protobuf::io::ArrayInputStream ais(_inputMessageQueue.front().msg.data(), _inputMessageQueue.front().msg.size());
+        google::protobuf::io::CodedInputStream cis(&ais);
+        if (incomingMessage->msg.ParseFromCodedStream(&cis)) {
+            if (!cis.ConsumedEntireMessage()) {
+                std::cerr << "[Client] Could not parse entire message" << std::endl;
+                throw; // TODO
+            }
+            onMessageReceive(incomingMessage);
+        } else {
+            std::cerr << "[Client] Message could not be processed: "
+                      << _inputMessageQueue.front()
+                      << std::endl;
         }
-    } else {
-        std::cerr << "[Client] Message could not be processed: "
-                  << _inputMessageQueue.front()
-                  << std::endl;
+        incomingMessage.reset();
+        _inputMessageQueue.pop_front();
     }
-    _inputMessageQueue.pop_front();
-
-    return incomingMessage;
 }
 
 } // ns client

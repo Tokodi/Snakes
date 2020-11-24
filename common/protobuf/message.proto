@@ -2,22 +2,27 @@ syntax = "proto2";
 
 package snakes;
 
+enum field_t {
+    FOOD = 1;
+    SNAKE = 2;
+    EMPTY = 3;
+}
+
 message position_msg_t {
-    required int32 x = 1;
-    required int32 y = 2;
+    required field_t field_type = 1;
+
+    optional int32 id = 2;
+
+    required int32 x = 3;
+    required int32 y = 4;
 }
 
 message login_msg_t {
     required string username = 1;
 }
 
-message food_msg_t {
-    required position_msg_t position = 1;
-}
-
-message snake_msg_t {
-    required int32 id = 1;
-    repeated position_msg_t snakePart = 2;
+message field_changes_msg_t {
+    repeated position_msg_t position = 1;
 }
 
 message game_step_msg_t {
@@ -28,8 +33,7 @@ message common_msg_t {
 
     oneof MsgT {
         login_msg_t login = 2;
-        food_msg_t food = 3;
-        snake_msg_t snake = 4;
-        game_step_msg_t step = 5;
+        field_changes_msg_t field_change = 3;
+        game_step_msg_t step = 4;
     }
 }

@@ -21,7 +21,7 @@ class game_t {
     std::vector<std::unique_ptr<snake_t>> const& getSnakes() const;
 
     std::pair<uint32_t, uint32_t> placePlayerOnTable(uint32_t id, std::string username);
-    void drawFoodOnTable(std::pair<uint32_t, uint32_t> food);
+    void setTableField(std::pair<uint32_t, uint32_t> position, char fieldType);
 
   private:
     void createTable(const uint32_t width, const uint32_t height);

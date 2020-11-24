@@ -26,16 +26,17 @@ class proto_server_t {
 
     bool start();
 
+  protected:
     void sendMessageToClient(std::shared_ptr<common::connection_t<proto_message_t>> connection, const proto_message_t& message);
-    void broadcastMessage(const proto_message_t& message);
+    void broadcastMessage(const proto_message_t& message, std::shared_ptr<common::connection_t<proto_message_t>> ignoredConnection = nullptr);
+
+    virtual void onConnectionClose(const std::shared_ptr<const common::connection_t<proto_message_t>> connection) = 0;
+    virtual void onMessageReceive(const std::shared_ptr<const common::owned_message_t<proto_message_t>> message) = 0;
 
   private:
     void stop();
     void waitForConnection();
     void startMessageProcessingLoop();
-
-    virtual void onConnectionClose(const std::shared_ptr<const common::connection_t<proto_message_t>> connection) = 0;
-    virtual void onMessageReceive(const std::shared_ptr<const common::owned_message_t<proto_message_t>> message) = 0;
 
   private:
     uint32_t connectionId = 1;
@@ -87,11 +88,12 @@ void proto_server_t<proto_message_t>::sendMessageToClient(std::shared_ptr<common
 }
 
 template<class proto_message_t>
-void proto_server_t<proto_message_t>::broadcastMessage(const proto_message_t& message) {
+void proto_server_t<proto_message_t>::broadcastMessage(const proto_message_t& message, std::shared_ptr<common::connection_t<proto_message_t>> ignoredConnection) {
     bool invalidConnectionsFound = false;
     for (auto connection : _connections) {
         if (connection && connection->isOpen()) {
-            connection->send(message);
+            if (connection != ignoredConnection)
+                connection->send(message);
         } else {
             onConnectionClose(connection);
             connection.reset();
