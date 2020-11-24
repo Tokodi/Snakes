@@ -14,6 +14,7 @@ class game_t {
   public:
     game_t();
 
+    void step();
     void createFood();
 
     const std::shared_ptr<table_t> getTable() const;
@@ -23,7 +24,10 @@ class game_t {
     std::pair<uint32_t, uint32_t> placePlayerOnTable(uint32_t id, std::string username);
     void setTableField(std::pair<uint32_t, uint32_t> position, char fieldType);
 
+    bool isGameOver() const;
+
   private:
+    void updateSnakesOnTable();
     void createTable(const uint32_t width, const uint32_t height);
 
     std::pair<uint32_t, uint32_t> getRandomPosition() const;

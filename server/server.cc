@@ -1,5 +1,6 @@
 #include "server.h"
 
+#include <chrono>
 #include <iostream>
 
 using position_t = std::pair<uint32_t, uint32_t>;
@@ -12,12 +13,52 @@ server_t::server_t(const uint16_t port) : net::server::proto_server_t<snakes::co
 
 void server_t::startGame() {
     std::cout << "[GameServer] Starting game!" << std::endl;
-    _game.getTable()->debugPrint();
 
-    snakes::common_msg_t stepGameMsg;
-    stepGameMsg.set_id(3);
+    while (!_game.isGameOver()) {
+        // Step game
+        _game.step();
 
-    broadcastMessage(stepGameMsg);
+        // Broadcast modified fields
+        snakes::common_msg_t modifiedFieldsMsg;
+        modifiedFieldsMsg.set_id(2);
+
+        // Add food field (is it did not change, this is an overhead TODO)
+        // BUG: Reprints the food on the snakes position after consumption
+        snakes::position_msg_t* foodPosition = modifiedFieldsMsg.mutable_field_change()->add_position();
+        foodPosition->set_field_type(snakes::field_t::FOOD);
+        foodPosition->set_x(_game.getFood()->getPosition().first);
+        foodPosition->set_y(_game.getFood()->getPosition().second);
+
+        for (const auto& snake : _game.getSnakes()) {
+            if (!snake->isAlive())
+                // TODO: Send empty for each position of the snake to clear its place on the table
+                continue;
+
+            // Add head position of alive snake
+            snakes::position_msg_t* snakeHeadPosition = modifiedFieldsMsg.mutable_field_change()->add_position();
+            snakeHeadPosition->set_field_type(snakes::field_t::SNAKE);
+            snakeHeadPosition->set_id(snake->getId());
+            snakeHeadPosition->set_x(snake->getHeadPosition().first);
+            snakeHeadPosition->set_y(snake->getHeadPosition().second);
+
+            // Clear trail position of alive snake
+            snakes::position_msg_t* snakeTrailPosition = modifiedFieldsMsg.mutable_field_change()->add_position();
+            snakeTrailPosition->set_field_type(snakes::field_t::EMPTY);
+            snakeTrailPosition->set_x(snake->getTrailPosition().first);
+            snakeTrailPosition->set_y(snake->getTrailPosition().second);
+        }
+
+        broadcastMessage(modifiedFieldsMsg);
+
+        // Broadcast game stepped message
+        snakes::common_msg_t stepGameMsg;
+        stepGameMsg.set_id(3);
+        broadcastMessage(stepGameMsg);
+
+        _game.getTable()->debugPrint();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    }
 }
 
 void server_t::onConnectionClose(const std::shared_ptr<const net::common::connection_t<snakes::common_msg_t>> connection) {

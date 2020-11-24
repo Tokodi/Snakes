@@ -14,6 +14,45 @@ game_t::game_t() {
     createTable(TABLE_WIDTH, TABLE_HEIGHT);
 }
 
+void game_t::step() {
+    if (_isGameOver)
+        return;
+
+    if (!_food) {
+        createFood();
+    }
+
+    for (const auto& snake : _snakes) {
+        snake->move();
+        if (!snake->isAlive() || !_table->isInside(snake->getHeadPosition())) {
+            // snake->kill();
+            _isGameOver = true; // TODO: Only remove this snake from the table. Game over when only 1 is alive
+        }
+
+        if (snake->getHeadPosition() == _food->getPosition()) {
+            snake->grow();
+            _food.reset();
+        }
+    }
+
+    updateSnakesOnTable();
+}
+
+// TODO: Refactor game model...
+void game_t::updateSnakesOnTable() {
+    for (const auto& snake : _snakes) {
+        if (!snake->isAlive())
+            continue;
+
+        try {
+            _table->setField(snake->getTrailPosition(), '0');
+            _table->setField(snake->getHeadPosition(), '0' + snake->getId());
+        } catch (std::exception& e) {
+            std::cerr << "[" << __func__ << "] Exception caught: " << e.what() << std::endl;
+        }
+    }
+}
+
 position_t game_t::placePlayerOnTable(uint32_t id, std::string username) {
     position_t randomSnakePosition;
     do {
@@ -23,7 +62,6 @@ position_t game_t::placePlayerOnTable(uint32_t id, std::string username) {
 
     try {
         _table->setField(_snakes.back()->getHeadPosition(), '0' + id);
-        _table->setField(_snakes.back()->getTailPosition(), '0' + id);
     } catch (std::exception& e) {
         std::cerr << "[" << __func__ << "] Exception caught: " << e.what() << std::endl;
     }
@@ -50,6 +88,10 @@ void game_t::setTableField(position_t position, char fieldType) {
     } catch (std::exception& e) {
         std::cerr << "[" << __func__ << "] Exception caught: " << e.what() << std::endl;
     }
+}
+
+bool game_t::isGameOver() const {
+    return _isGameOver;
 }
 
 void game_t::createTable(const uint32_t width, const uint32_t height) {

@@ -37,8 +37,12 @@ void snake_t::move() {
     }
 
     _body.emplace_front(newHead);
-    _trailPosition = _body.back();
+
+    auto tmpPosition = _body.back();
     _body.pop_back();
+
+    if (_body.back() != tmpPosition)
+        _trailPosition = tmpPosition;
 
     if (didSelfHarm()) {
         _isAlive = false;
