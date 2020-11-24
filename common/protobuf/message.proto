@@ -1,0 +1,35 @@
+syntax = "proto2";
+
+package snakes;
+
+message position_msg_t {
+    required int32 x = 1;
+    required int32 y = 2;
+}
+
+message login_msg_t {
+    required string username = 1;
+}
+
+message food_msg_t {
+    required position_msg_t position = 1;
+}
+
+message snake_msg_t {
+    required int32 id = 1;
+    repeated position_msg_t snakePart = 2;
+}
+
+message game_step_msg_t {
+}
+
+message common_msg_t {
+    required int32 id = 1;
+
+    oneof MsgT {
+        login_msg_t login = 2;
+        food_msg_t food = 3;
+        snake_msg_t snake = 4;
+        game_step_msg_t step = 5;
+    }
+}
