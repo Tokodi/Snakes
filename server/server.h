@@ -9,23 +9,18 @@
 
 namespace server {
 
-// TODO: Inherit from net_server, that way OnDisconnect can be overwritten...
-class server_t {
+class server_t final : public net::server::proto_server_t<snakes::common_msg_t> {
   public:
     server_t(const uint16_t port);
-    ~server_t();
+    ~server_t() {}
 
-    void start();
-
-  private:
-    void processIncomingEvents();
-
-    void processLoginMessage(std::shared_ptr<net::common::owned_message_t<snakes::common_msg_t>> loginMessage);
+    void onConnectionClose(const std::shared_ptr<const net::common::connection_t<snakes::common_msg_t>> connection) final;
+    void onMessageReceive(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> message) final;
 
   private:
-    std::unique_ptr<net::server::proto_server_t<snakes::common_msg_t>> _net_server;
-    std::thread _messageProcessorThread;
+    void processLoginMessage(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> loginMessage);
 
+  private:
     common::game_model::game_t _game;
 };
 
