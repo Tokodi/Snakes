@@ -62,7 +62,7 @@ void server_t::startGame() {
 
         //_game.getTable()->debugPrint();
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(150));
+        std::this_thread::sleep_for(std::chrono::milliseconds(150));
     }
 }
 
