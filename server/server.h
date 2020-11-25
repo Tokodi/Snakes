@@ -18,6 +18,7 @@ class server_t final : public net::server::proto_server_t<snakes::common_msg_t> 
 
   private:
     void processLoginMessage(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> loginMessage);
+    void changeSnakeDirection(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> dirChangeMessage);
 
     void onConnectionClose(const std::shared_ptr<const net::common::connection_t<snakes::common_msg_t>> connection) final;
     void onMessageReceive(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> message) final;

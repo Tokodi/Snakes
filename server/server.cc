@@ -57,7 +57,7 @@ void server_t::startGame() {
 
         _game.getTable()->debugPrint();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
     }
 }
 
@@ -75,6 +75,9 @@ void server_t::onMessageReceive(const std::shared_ptr<const net::common::owned_m
     switch (message->msg.id()) {
         case 1:
             processLoginMessage(message);
+            break;
+        case 4:
+            changeSnakeDirection(message);
             break;
         default:
             std::cerr << "[GameServer] Unknown event id" << std::endl;
@@ -123,6 +126,30 @@ void server_t::processLoginMessage(const std::shared_ptr<const net::common::owne
     foodPosition->set_y(_game.getFood()->getPosition().second);
 
     sendMessageToClient(loginMessage->ownerConnection, foodMsg);
+}
+
+void server_t::changeSnakeDirection(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> dirChangeMessage) {
+    std::cout << "[GameServer] Processing direction change message " << std::endl;
+
+    for (const auto& snake : _game.getSnakes()) {
+        if (snake->getId() == dirChangeMessage->ownerConnection->getId()) {
+            switch (dirChangeMessage->msg.change_dir().new_direction()) {
+                case snakes::direction_t::LEFT:
+                    snake->changeDirection(common::game_model::direction_e::LEFT);
+                    break;
+                case snakes::direction_t::UP:
+                    snake->changeDirection(common::game_model::direction_e::UP);
+                    break;
+                case snakes::direction_t::DOWN:
+                    snake->changeDirection(common::game_model::direction_e::DOWN);
+                    break;
+                case snakes::direction_t::RIGHT:
+                    snake->changeDirection(common::game_model::direction_e::RIGHT);
+                    break;
+            }
+            return;
+        }
+    }
 }
 
 } // ns server

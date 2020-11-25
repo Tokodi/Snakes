@@ -28,6 +28,17 @@ message field_changes_msg_t {
 message game_step_msg_t {
 }
 
+enum direction_t {
+    LEFT = 1;
+    UP = 2;
+    DOWN = 3;
+    RIGHT = 4;
+}
+
+message dir_change_msg_t {
+    required direction_t new_direction = 1;
+}
+
 message common_msg_t {
     required int32 id = 1;
 
@@ -35,5 +46,6 @@ message common_msg_t {
         login_msg_t login = 2;
         field_changes_msg_t field_change = 3;
         game_step_msg_t step = 4;
+        dir_change_msg_t change_dir = 5;
     }
 }

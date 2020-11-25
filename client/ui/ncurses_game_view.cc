@@ -44,10 +44,10 @@ void ncurses_view::draw(const std::shared_ptr<const common::game_model::table_t>
         for (unsigned int y = 0; y < table->getHeight(); ++y) {
             switch (table->getField(position_t(x, y))) {
                 case 'F':
-                    _gameWindow->drawPixel(position_t(x + x + 1, y + 1), COLOR_BLACK_IDX);
-                    break;
-                case 0:
                     _gameWindow->drawPixel(position_t(x + x + 1, y + 1), COLOR_RED_IDX);
+                    break;
+                case '0':
+                    _gameWindow->drawPixel(position_t(x + x + 1, y + 1), COLOR_BLACK_IDX);
                     break;
                 default:
                     // TODO: Different color for different ids

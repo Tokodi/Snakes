@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "ui/utils.h"
+
 using position_t = std::pair<uint32_t, uint32_t>;
 
 namespace client {
@@ -10,6 +12,10 @@ client_t::client_t(const std::string& host, const uint16_t port) {
     if (!connectToServer(host, port)) {
         std::cerr << "[GameClient] Server is unavailable!" << std::endl;
     }
+
+    ui::initialize();
+    _view = std::make_unique<ui::ncurses_view>(_game.getTable()->getWidth(), _game.getTable()->getHeight());
+    _view->show();
 }
 
 void client_t::onMessageReceive(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> message) {
@@ -37,7 +43,8 @@ void client_t::onMessageReceive(const std::shared_ptr<const net::common::owned_m
             break;
         case 3:
             // Step game
-            _game.getTable()->debugPrint();
+            //_game.getTable()->debugPrint();
+            _view->draw(_game.getTable());
             break;
         default:
             std::cerr << "[GameClient] Unknown event id" << std::endl;
@@ -51,6 +58,27 @@ void client_t::login(const std::string& userName) {
     loginMsg.mutable_login()->set_username(userName);
 
     sendMessageToServer(loginMsg);
+}
+
+void client_t::changeDirection(common::game_model::direction_e newDirection) {
+    snakes::common_msg_t directionMsg;
+    directionMsg.set_id(4);
+    switch (newDirection) {
+        case common::game_model::direction_e::LEFT:
+            directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::LEFT);
+            break;
+        case common::game_model::direction_e::UP:
+            directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::UP);
+            break;
+        case common::game_model::direction_e::DOWN:
+            directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::DOWN);
+            break;
+        case common::game_model::direction_e::RIGHT:
+            directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::RIGHT);
+            break;
+    }
+
+    sendMessageToServer(directionMsg);
 }
 
 } // ns client
