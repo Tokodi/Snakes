@@ -10,9 +10,9 @@ void initialize() {
     initscr();
     cbreak();
     noecho();
-    timeout(0);
+    timeout(-1);
     curs_set(0);
-    nodelay(stdscr, TRUE);
+    nodelay(stdscr, FALSE);
     keypad(stdscr, TRUE);
 
     if (!has_colors()) {

@@ -67,6 +67,10 @@ void ncurses_view::hide() {
     _gameWindow->hide();
 }
 
+int ncurses_view::getchar() const {
+    return _gameWindow->getchar();
+}
+
 void ncurses_view::initialize() {
     int posX = COLS/2 - _width - 1;
     int posY = LINES/2 - _height/2 - 1;

@@ -24,6 +24,8 @@ public:
     void show();
     void hide();
 
+    int getchar() const;
+
 private:
     void initialize();
 

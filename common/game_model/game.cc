@@ -18,10 +18,6 @@ void game_t::step() {
     if (_isGameOver)
         return;
 
-    if (!_food) {
-        createFood();
-    }
-
     for (const auto& snake : _snakes) {
         snake->move();
         if (!snake->isAlive() || !_table->isInside(snake->getHeadPosition())) {
@@ -32,10 +28,13 @@ void game_t::step() {
         if (snake->getHeadPosition() == _food->getPosition()) {
             snake->grow();
             _food.reset();
+            createFood();
         }
     }
 
-    updateSnakesOnTable();
+    // TODO: Remove this...:
+    if (!_isGameOver)
+        updateSnakesOnTable();
 }
 
 // TODO: Refactor game model...

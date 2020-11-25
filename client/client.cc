@@ -16,6 +16,8 @@ client_t::client_t(const std::string& host, const uint16_t port) {
     ui::initialize();
     _view = std::make_unique<ui::ncurses_view>(_game.getTable()->getWidth(), _game.getTable()->getHeight());
     _view->show();
+
+    //_inputListenerThread = std::thread([this]() { listenForKeyboardInput(); });
 }
 
 void client_t::onMessageReceive(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> message) {
@@ -60,25 +62,42 @@ void client_t::login(const std::string& userName) {
     sendMessageToServer(loginMsg);
 }
 
-void client_t::changeDirection(common::game_model::direction_e newDirection) {
+void client_t::listenForKeyboardInput() {
     snakes::common_msg_t directionMsg;
     directionMsg.set_id(4);
-    switch (newDirection) {
-        case common::game_model::direction_e::LEFT:
-            directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::LEFT);
-            break;
-        case common::game_model::direction_e::UP:
-            directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::UP);
-            break;
-        case common::game_model::direction_e::DOWN:
-            directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::DOWN);
-            break;
-        case common::game_model::direction_e::RIGHT:
-            directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::RIGHT);
-            break;
+    int ch;
+    while (true) {
+        ch = _view->getchar();
+        switch (ch) {
+            case KEY_LEFT:
+                directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::LEFT);
+                break;
+            case KEY_RIGHT:
+                directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::RIGHT);
+                break;
+            case KEY_UP:
+                directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::UP);
+                break;
+            case KEY_DOWN:
+                directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::DOWN);
+                break;
+            case 'a':
+                directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::LEFT);
+                break;
+            case 'd':
+                directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::RIGHT);
+                break;
+            case 'w':
+                directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::UP);
+                break;
+            case 's':
+                directionMsg.mutable_change_dir()->set_new_direction(snakes::direction_t::DOWN);
+                break;
+            default:
+                continue;
+        }
+        sendMessageToServer(directionMsg);
     }
-
-    sendMessageToServer(directionMsg);
 }
 
 } // ns client

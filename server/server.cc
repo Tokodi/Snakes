@@ -18,6 +18,11 @@ void server_t::startGame() {
         // Step game
         _game.step();
 
+        // TODO: Remove
+        if (_game.isGameOver()) {
+            return;
+        }
+
         // Broadcast modified fields
         snakes::common_msg_t modifiedFieldsMsg;
         modifiedFieldsMsg.set_id(2);
@@ -55,9 +60,9 @@ void server_t::startGame() {
         stepGameMsg.set_id(3);
         broadcastMessage(stepGameMsg);
 
-        _game.getTable()->debugPrint();
+        //_game.getTable()->debugPrint();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(150));
     }
 }
 
@@ -86,7 +91,7 @@ void server_t::onMessageReceive(const std::shared_ptr<const net::common::owned_m
 }
 
 void server_t::processLoginMessage(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> loginMessage) {
-    std::cout << "[GameServer] Processing login message " << std::endl;
+    //std::cout << "[GameServer] Processing login message " << std::endl;
     position_t playerPosition = _game.placePlayerOnTable(loginMessage->ownerConnection->getId(), loginMessage->msg.login().username());
 
     // Broadcast new player position
@@ -129,7 +134,7 @@ void server_t::processLoginMessage(const std::shared_ptr<const net::common::owne
 }
 
 void server_t::changeSnakeDirection(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> dirChangeMessage) {
-    std::cout << "[GameServer] Processing direction change message " << std::endl;
+    //std::cout << "[GameServer] Processing direction change message " << std::endl;
 
     for (const auto& snake : _game.getSnakes()) {
         if (snake->getId() == dirChangeMessage->ownerConnection->getId()) {

@@ -25,8 +25,11 @@ int main() {
 //    client.show_ui();
 
     // NOTE: If removed client gets desctructed, but startMessageProcessingLoop does not return
-    int clientCommand;
-    std::cin >> clientCommand;
+//    int clientCommand;
+//    std::cin >> clientCommand;
+//
+
+    client.listenForKeyboardInput();
 
     return 0;
 }
