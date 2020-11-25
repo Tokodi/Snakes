@@ -1,8 +1,9 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
-#include <vector>
 #include <ostream>
+#include <vector>
 
 #include "connection.h"
 #include "utils.h"

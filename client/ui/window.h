@@ -2,6 +2,7 @@
 
 #include "ui_element.h"
 
+#include <cstdint>
 #include <string>
 
 namespace client {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <ncurses.h>
 #include <utility>
 

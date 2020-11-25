@@ -2,6 +2,7 @@
 
 #include "window.h"
 
+#include <cstdint>
 #include <memory>
 
 #include "common/game_model/table.h"
