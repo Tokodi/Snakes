@@ -4,6 +4,7 @@
 #include "ui/utils.h"
 
 int main() {
+    //std::string hostIp = "192.168.1.160";
     std::string hostIp = "127.0.0.1";
     uint16_t port = 9092;
 

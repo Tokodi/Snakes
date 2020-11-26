@@ -62,7 +62,7 @@ void server_t::startGame() {
 
         //_game.getTable()->debugPrint();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(150));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 
@@ -131,6 +131,11 @@ void server_t::processLoginMessage(const std::shared_ptr<const net::common::owne
     foodPosition->set_y(_game.getFood()->getPosition().second);
 
     sendMessageToClient(loginMessage->ownerConnection, foodMsg);
+
+    // To show position before starting
+    snakes::common_msg_t stepGameMsg;
+    stepGameMsg.set_id(3);
+    broadcastMessage(stepGameMsg);
 }
 
 void server_t::changeSnakeDirection(const std::shared_ptr<const net::common::owned_message_t<snakes::common_msg_t>> dirChangeMessage) {
